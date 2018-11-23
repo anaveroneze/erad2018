@@ -155,20 +155,20 @@ void fof(int b, float rperc){
   int MAX = 0;
 
   for(i=0;i<max;i++){
-     printf("\nBLOCO %d:\n", i);
+     //printf("\nBLOCO %d:\n", i);
      for(j=0;j<elem;j++){
        igru[i][j] = igru[i][j] + MAX;
-       printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+       //printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
        if(igru[i][j] > start)
           start = igru[i][j];
      }
      MAX = start;
   }
 
-  printf( "\nBLOCO RESTO %d\n", i);
+  //printf( "\nBLOCO RESTO %d\n", i);
   for(j=0;j<resto;j++){
     igru[i][j] = igru[i][j] + start;
-    printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+    //printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
   }
 
   float x_ant = x_bloco[0][elem-1];
@@ -182,7 +182,7 @@ void fof(int b, float rperc){
   int novo = -1;
   int change = numgrupos;
 
-  printf("\nPós-processamento:\n");
+  printf("\nPós-processamento...\n");
 
   int b1, b2, resto_calc; //Variáveis para percorrer os blocos
 
@@ -212,19 +212,8 @@ void fof(int b, float rperc){
 
               //Se as partículas pertencem ao mesmo grupo:
               if( (rperc2 >= (dist_x + dist_y + dist_z)) ){
-                //printf("rperc: %f >=  (dist_x + dist_y + dist_z) %f\n\n", rperc2, dist_x, dist_y, dist_z);
-                //printf("GRUPO ANTES: %d (bloco: %d part: %d)    GRUPO DEPOIS: %d\n\n", igru[b2][j], b2, j, igru_ant);
-                //Troca pro grupo de menor valor
-                //if(igru[b2][j] > igru_ant){
                   numgrupos--;
                   seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
-                //}
-                  //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, elem);
-                // else{
-                //   seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
-                //   //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], elem);
-                // }
-
               }
 
             }else{ //Senão as próximas partículas não precisam ser verificadas (pois está ordenado por X)
@@ -245,18 +234,8 @@ void fof(int b, float rperc){
                         dist_y = (y_bloco[b2][j] - y_ant)*(y_bloco[b2][j] - y_ant);
                         dist_z = (z_bloco[b2][j] - z_ant)*(z_bloco[b2][j] - z_ant);
                         if( (rperc2 >= (dist_x + dist_y + dist_z)) ){
-                          //printf("GRUPO ANTES: %d (bloco: %d part: %d)    GRUPO DEPOIS: %d\n\n", igru[b2][j], b2, j, igru_ant);
-
-                          //if(igru[b2][j] > igru_ant){
                             numgrupos--;
                             seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
-                            //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, resto);
-                          //}
-                          // else{
-                          //   seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
-                          //   //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], resto);
-                          // }
-
                         }
                   }
             }
@@ -265,17 +244,17 @@ void fof(int b, float rperc){
     }
   }
 
-  for(i=0;i<max;i++){
-     printf("\nBLOCO %d:\n", i);
-     for(j=0;j<elem;j++){
-       printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
-     }
-  }
-
-  printf( "\nBLOCO RESTO %d\n", i);
-  for(j=0;j<resto;j++){
-    printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
-  }
+  // for(i=0;i<max;i++){
+  //    printf("\nBLOCO %d:\n", i);
+  //    for(j=0;j<elem;j++){
+  //      printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+  //    }
+  // }
+  //
+  // printf( "\nBLOCO RESTO %d\n", i);
+  // for(j=0;j<resto;j++){
+  //   printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+  // }
 
   printf("Número de grupos pós processamento: %d\n", numgrupos);
 
