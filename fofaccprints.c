@@ -44,42 +44,37 @@ int FriendsAcc(float *x_bloco, float *y_bloco, float *z_bloco, int n, float rper
 // Percorre todas as partículas modificando os seus grupos
 // Vetor de grupos; Grupo antes; Grupo atual; Grupo novo; Nº elementos;
 //---------------------------------------------------------------------------
-void seta_grupos(int*igru1, int*igru2, int grupoatual, int gruponovo, int elem){
-
-  int i;
-  for(i = 0; i < elem; i++){
-    if(igru1[i] == grupoatual)
-      igru1[i] = gruponovo;
-
-    if(igru2[i] == grupoatual)
-        igru2[i] = gruponovo;
-  }
-}
-
-//TENTATIVA PARALELO
-// void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblocos, int resto){
+// void seta_grupos(int*igru1, int*igru2, int grupoatual, int gruponovo, int elem){
 //
-//   int b, i;
+//   int i;
+//   for(i = 0; i < elem; i++){
+//     if(igru1[i] == grupoatual)
+//       igru1[i] = gruponovo;
 //
-//   #pragma acc data create(igru[0:maxblocos][0:elem])
-//   {
-//     #pragma acc update device(igru[0:maxblocos][0:elem])
-//     for(b=0; b < maxblocos; b++){
-//       #pragma acc parallel loop
-//       for(i = 0; i < elem; i++){
-//         if(igru[b][i] == grupoatual){
-//           igru[b][i] = gruponovo;
-//         }
-//       }
-//     }
-//     #pragma acc update self(igru[0:maxblocos][0:elem])
-//   }
-//
-//   for(i = 0; i < resto; i++){
-//     if(igru[b][i] == grupoatual)
-//       igru[b][i] = gruponovo;
+//     if(igru2[i] == grupoatual)
+//         igru2[i] = gruponovo;
 //   }
 // }
+
+//PARALELO
+void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblocos, int resto){
+
+  int b, i;
+
+  #pragma omp parallel for collapse(2)
+  for(b=0; b < maxblocos; b++){
+    for(i = 0; i < elem; i++){
+      if(igru[b][i] == grupoatual){
+        igru[b][i] = gruponovo;
+      }
+    }
+  }
+
+  for(i = 0; i < resto; i++){
+    if(igru[b][i] == grupoatual)
+      igru[b][i] = gruponovo;
+  }
+}
 
 int compara(const void *a, const void *b){
   int xa = *(const int*) a;
@@ -235,11 +230,11 @@ void fof(int b, float rperc){
                 change++;
                 //Troca pro grupo de menor valor
                 if(igru[b2][j] > igru_ant)
-                  //seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
-                  seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, elem);
+                  seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
+                  //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, elem);
                 else
-                  //seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
-                  seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], elem);
+                  seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
+                  //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], elem);
               }
 
             }else{ //Senão as próximas partículas não precisam ser verificadas (pois está ordenado por X)
@@ -264,11 +259,11 @@ void fof(int b, float rperc){
                           //numgrupos--;
                           change++;
                           if(igru[b2][j] > igru_ant)
-                            //seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
-                            seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, resto);
+                            seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
+                            //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, resto);
                           else
-                            //seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
-                            seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], resto);
+                            seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
+                            //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], resto);
                         }
                   }
             }
