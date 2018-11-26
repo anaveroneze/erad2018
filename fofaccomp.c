@@ -7,7 +7,7 @@
 #include <omp.h>
 #include "fofacc.h"
 
-#define debug = false
+#define debug false
 //Compile: pgcc -g main.c fofaccomp.c -o runaccomp -ta=nvidia:nvidia -mp -Minfo
 
 //---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblo
   int b, i;
 
   for(b=0; b < maxblocos; b++){
-  //#pragma omp parallel for
+  #pragma omp parallel for
 	for(i = 0; i < elem; i++){
       if(igru[b][i] == grupoatual){
         igru[b][i] = gruponovo;
