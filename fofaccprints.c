@@ -61,8 +61,8 @@ void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblo
 
   int b, i;
 
-  #pragma omp parallel for collapse(2)
   for(b=0; b < maxblocos; b++){
+    #pragma omp parallel for
     for(i = 0; i < elem; i++){
       if(igru[b][i] == grupoatual){
         igru[b][i] = gruponovo;
@@ -221,19 +221,20 @@ void fof(int b, float rperc){
             if(rperc2 >= dist_x) { //Se a distância entre as partículas sobre o eixo X for menor que o raio, continua
               dist_y = (y_bloco[b2][j] - y_ant)*(y_bloco[b2][j] - y_ant);
               dist_z = (z_bloco[b2][j] - z_ant)*(z_bloco[b2][j] - z_ant);
-
+              if(rperc2 >= (dist_x + dist_y))
+                printf("X + Y %f >= (%f + %f)\n", rperc2, dist_x, dist_y);
               //Se as partículas pertencem ao mesmo grupo:
               if( (rperc2 >= (dist_x + dist_y + dist_z)) ){
                 printf("B: %d P: %d G: %d\n", b2, j, igru[b2][j]);
                 //printf("rperc: %f >=  (dist_x + dist_y + dist_z) %f\n\n", rperc2, dist_x, dist_y, dist_z);
                 printf("GRUPO ANTES: %d (bloco: %d part: %d)    GRUPO DEPOIS: %d\n\n", igru[b2][j], b2, j, igru_ant);
-                change++;
+                numgrupos--;
                 //Troca pro grupo de menor valor
-                if(igru[b2][j] > igru_ant)
+                //if(igru[b2][j] > igru_ant)
                   seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
                   //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, elem);
-                else
-                  seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
+                //else
+                  //seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
                   //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], elem);
               }
 
@@ -257,12 +258,12 @@ void fof(int b, float rperc){
                         if( (rperc2 >= (dist_x + dist_y + dist_z)) ){
                           printf("GRUPO ANTES: %d (bloco: %d part: %d)    GRUPO DEPOIS: %d\n\n", igru[b2][j], b2, j, igru_ant);
                           //numgrupos--;
-                          change++;
-                          if(igru[b2][j] > igru_ant)
+                          numgrupos--;
+                      //    if(igru[b2][j] > igru_ant)
                             seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
                             //seta_grupos(igru[b2], igru[b1], igru[b2][j], igru_ant, resto);
-                          else
-                            seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
+                        //  else
+                          //  seta_grupos(igru, igru_ant, igru[b2][j], elem, max, resto);
                             //seta_grupos(igru[b2], igru[b1], igru_ant, igru[b2][j], resto);
                         }
                   }
@@ -273,7 +274,6 @@ void fof(int b, float rperc){
   }
 
   printf("Grupos pós processamento: %d\n", numgrupos);
-  printf("Mudancas: %d\n", change);
 
   for(i=0;i<max;i++){
      printf("\nBLOCO %d:\n", i);

@@ -7,7 +7,9 @@
 #include <omp.h>
 #include "fofacc.h"
 
-//compile: pgcc -g main.c fofaccomp.c -o runaccomp -ta=nvidia:nvidia -mp -Minfo
+#define debug = false
+//Compile: pgcc -g main.c fofaccomp.c -o runaccomp -ta=nvidia:nvidia -mp -Minfo
+
 //---------------------------------------------------------------------------
 /**************************** FoF ******************************/
 //---------------------------------------------------------------------------
@@ -41,17 +43,16 @@ int FriendsAcc(float *x_bloco, float *y_bloco, float *z_bloco, int n, float rper
 }
 
 //---------------------------------------------------------------------------
-/**************************** FoF ******************************/
+/**************************** Pós-processamento ******************************/
 // Percorre todas as partículas modificando os seus grupos
-// Vetor de grupos; Grupo antes; Grupo atual; Grupo novo; Nº elementos;
+// Vetor de grupos; Grupo atual; Grupo novo; Nº elementos; Nº de blocos, resto;
 //---------------------------------------------------------------------------
-//TENTATIVA PARALELO
 void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblocos, int resto){
 
   int b, i;
 
   for(b=0; b < maxblocos; b++){
-  #pragma omp parallel for
+  //#pragma omp parallel for
 	for(i = 0; i < elem; i++){
       if(igru[b][i] == grupoatual){
         igru[b][i] = gruponovo;
@@ -65,6 +66,7 @@ void seta_grupos(int** igru, int grupoatual, int gruponovo, int elem, int maxblo
   }
 }
 
+/******************** Comparação para ordenar os vetores *********************/
 int compara(const void *a, const void *b){
   int xa = *(const int*) a;
   int xb = *(const int*) b;
@@ -76,7 +78,7 @@ int compara(const void *a, const void *b){
 //---------------------------------------------------------------------------
 void fof(int b, float rperc){
 
-  int i, j, resto, max, elem, m, numblocos;
+  int i, j, resto, max, elem, numblocos;
   int *aux = malloc(sizeof(int)*N);
   int start, end, cont, numgrupos;
 
@@ -87,7 +89,7 @@ void fof(int b, float rperc){
   max = b;
   elem = N/max;
 
-  if(resto != 0){//A divisão do número total de partículas pelo numero de blocos não é exata
+  if(resto != 0){ //A divisão do número total de partículas pelo numero de blocos não é exata
     if(resto > elem){
       numblocos = resto/elem;
       resto = resto%elem;
@@ -99,8 +101,10 @@ void fof(int b, float rperc){
       b++;
   }
 
-  //printf("Blocos sem resto: %d\nBlocos total: %d\nElem máx por bloco: %d\n", max, b, elem);
-  //printf("Resto: %d\n\n", resto);
+#if debug==true
+  printf("Blocos sem resto: %d\nBlocos total: %d\nElem máx por bloco: %d\n", max, b, elem);
+  printf("Resto: %d\n\n", resto);
+#endif
 
   float **x_bloco = (float **)malloc(sizeof(float*)*b);
   float **y_bloco = (float **)malloc(sizeof(float*)*b);
@@ -176,15 +180,10 @@ void fof(int b, float rperc){
   float z_ant = z_bloco[0][elem-1];
   int igru_ant = igru[0][elem-1];
   float dist_x, dist_y, dist_z;
-  int k, bloco, particula, resto_m, c;
-  int prox = 0;
+  int b1, b2, resto_calc; //Variáveis para percorrer os blocos
   cont = 0;
-  int novo = -1;
-  int change = numgrupos;
 
   printf("\nPós-processamento...\n");
-
-  int b1, b2, resto_calc; //Variáveis para percorrer os blocos
 
   //Para cada bloco:
   for(b1 = 0; b1 < max; b1++){
@@ -215,7 +214,6 @@ void fof(int b, float rperc){
                   numgrupos--;
                   seta_grupos(igru, igru[b2][j], igru_ant, elem, max, resto);
               }
-
             }else{ //Senão as próximas partículas não precisam ser verificadas (pois está ordenado por X)
                j = elem;
                b2 = max;
@@ -244,17 +242,19 @@ void fof(int b, float rperc){
     }
   }
 
-  // for(i=0;i<max;i++){
-  //    printf("\nBLOCO %d:\n", i);
-  //    for(j=0;j<elem;j++){
-  //      printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
-  //    }
-  // }
-  //
-  // printf( "\nBLOCO RESTO %d\n", i);
-  // for(j=0;j<resto;j++){
-  //   printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
-  // }
+#if debug==true
+  for(i=0;i<max;i++){
+     printf("\nBLOCO %d:\n", i);
+     for(j=0;j<elem;j++){
+       printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[(elem*i)+j], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+     }
+  }
+
+  printf( "\nBLOCO RESTO %d\n", i);
+  for(j=0;j<resto;j++){
+    printf("%d %d particula - grupo %d - x: %.2f y: %.2f z: %.2f\n", id[cont], j, igru[i][j], x_bloco[i][j], y_bloco[i][j], z_bloco[i][j]);
+  }
+#endif
 
   printf("Número de grupos pós processamento: %d\n", numgrupos);
 
